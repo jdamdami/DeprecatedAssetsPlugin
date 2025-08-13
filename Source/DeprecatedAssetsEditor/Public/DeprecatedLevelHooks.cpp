@@ -130,7 +130,7 @@ void FDeprecatedLevelHooks::DeferredCheckActor(TWeakObjectPtr<AActor> WeakActor)
 
 	if (USkeletalMeshComponent* SKC = Actor->FindComponentByClass<USkeletalMeshComponent>())
 	{
-		CheckObject(SKC->SkeletalMesh);
+		CheckObject(SKC->GetSkeletalMeshAsset());
 		
 		for (int32 Index = 0; Index < SKC->GetNumMaterials(); ++Index)
 		{

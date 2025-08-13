@@ -10,7 +10,7 @@ FMetaData* UDeprecatedAssetMetadataLibrary::GetMetaForAsset(UObject* Asset)
 
 	if (UPackage* Package = Asset->GetOutermost())
 	{
-		return &Package->GetMetaData(); // UE5 returns FMetaData reference
+		return &Package->GetMetaData(); 
 	}
 
 	return nullptr;
