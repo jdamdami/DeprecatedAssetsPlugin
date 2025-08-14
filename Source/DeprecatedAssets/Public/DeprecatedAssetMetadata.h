@@ -2,7 +2,7 @@
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "UObject/SoftObjectPtr.h"
-#include "UObject/MetaData.h" // FMetaData in UE5
+#include "UObject/MetaData.h" 
 #include "DeprecatedAssetMetadata.generated.h"
 
 USTRUCT(BlueprintType)
@@ -26,6 +26,9 @@ class DEPRECATEDASSETS_API UDeprecatedAssetMetadataLibrary : public UBlueprintFu
 	GENERATED_BODY()
 
 public:
+	
+#if WITH_EDITOR
+	
 	UFUNCTION(BlueprintCallable, Category="DeprecatedAssets", meta=(DisplayName="Get Deprecated Asset Info"))
 	static bool GetDeprecatedInfo(UObject* Asset, FDeprecatedAssetInfo& OutInfo);
 
@@ -53,4 +56,7 @@ private:
 	static bool RemoveMetaValue(UObject* Asset, const FName& Key);
 	
 	static bool GetMetaValue(UObject* Asset, const FName& Key, FString& OutValue);
+
+#endif
+	
 };

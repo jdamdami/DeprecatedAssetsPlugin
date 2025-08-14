@@ -166,7 +166,7 @@ void FDeprecatedLevelHooks::OnPropertyChanged(UObject* Object, FPropertyChangedE
 	{
 		if (PropertyName == TEXT("SkeletalMesh"))
 		{
-			if (USkeletalMesh* Mesh = SKC->SkeletalMesh)
+			if (USkeletalMesh* Mesh = SKC->GetSkeletalMeshAsset())
 			{
 				TSoftObjectPtr<UObject> Replacement;
 				
@@ -182,8 +182,6 @@ void FDeprecatedLevelHooks::OnPropertyChanged(UObject* Object, FPropertyChangedE
 
 void FDeprecatedLevelHooks::OnPreSaveWorld(UWorld* World, FObjectPreSaveContext)
 {
-	UE_LOG(LogTemp, Error, TEXT("PRE SAVE WORLD CALLED"));
-	
 	bWarningShownThisSave = false;
 	
 	PackagesCheckedThisSave.Reset();
@@ -195,14 +193,10 @@ void FDeprecatedLevelHooks::OnObjectPreSave(UObject* Object, FObjectPreSaveConte
 {
 	if (!Object) return;
 
-	UE_LOG(LogTemp, Error, TEXT("OBJECT PRESAVE CALLED"));
-
 	if (UPackage* Package = Object->GetOutermost())
 	{
 		if (!PackagesCheckedThisSave.Contains(Package->GetFName()))
 		{
-			UE_LOG(LogTemp, Error, TEXT("OBJECT PRESAVE PASSED"));
-			
 			PackagesCheckedThisSave.Add(Package->GetFName());
 			
 			SchedulePackagesCheckedReset();
@@ -264,8 +258,6 @@ void FDeprecatedLevelHooks::ScanWorldForDeprecatedAssets(UWorld* World)
 
 void FDeprecatedLevelHooks::ScanPackageForDeprecatedAssets(UPackage* Package)
 {
-	UE_LOG(LogTemp, Error, TEXT("ScanPackageForDeprecatedAssets"));
-
 	if (!Package || bWarningShownThisSave) return;
 
 	IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
@@ -325,9 +317,11 @@ void FDeprecatedLevelHooks::SchedulePackagesCheckedReset()
 	FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([](float)
 	{
 		PackagesCheckedThisSave.Empty();
-		UE_LOG(LogTemp, Error, TEXT("PackagesCheckedThisSave RESET"));
+		
 		bResetScheduled = false;
+		
 		bWarningShownThisSave = false;
+		
 		return false; 
 	}), 0.5f);
 }

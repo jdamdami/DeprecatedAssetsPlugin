@@ -116,6 +116,7 @@ void FDeprecatedContentBrowserExtender::BuildMenu(FMenuBuilder& MenuBuilder, TAr
 			);
 		}
 	}
+	
 	MenuBuilder.EndSection();
 }
 

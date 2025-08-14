@@ -1,8 +1,11 @@
 #include "DeprecatedAssetMetadata.h"
 #include "UObject/Package.h"
 
+#if WITH_EDITOR
+
 const FName UDeprecatedAssetMetadataLibrary::MetaKey_Deprecated(TEXT("DeprecatedAssets.Deprecated"));
 const FName UDeprecatedAssetMetadataLibrary::MetaKey_Replacement(TEXT("DeprecatedAssets.Replacement"));
+
 
 FMetaData* UDeprecatedAssetMetadataLibrary::GetMetaForAsset(UObject* Asset)
 {
@@ -143,3 +146,6 @@ bool UDeprecatedAssetMetadataLibrary::GetReplacement(UObject* Asset, TSoftObject
 	
 	return false;
 }
+
+#endif
+
