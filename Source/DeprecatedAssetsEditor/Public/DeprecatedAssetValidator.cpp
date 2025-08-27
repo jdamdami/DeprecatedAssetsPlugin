@@ -1,12 +1,15 @@
 #include "DeprecatedAssetValidator.h"
 #include "DeprecatedAssetMetadata.h"
+#include "Misc/DataValidation.h"
 
-bool UDeprecatedAssetValidator::CanValidateAsset_Implementation(UObject* InAsset) const
+
+
+bool UDeprecatedAssetValidator::CanValidateAsset_Implementation(const FAssetData& InAssetData, UObject* InObject,FDataValidationContext& InContext) const
 {
-	return InAsset != nullptr;
+	return InObject != nullptr;
 }
 
-EDataValidationResult UDeprecatedAssetValidator::ValidateLoadedAsset_Implementation(UObject* InAsset, TArray<FText>& ValidationErrors)
+EDataValidationResult UDeprecatedAssetValidator::ValidateLoadedAsset_Implementation(const FAssetData& InAssetData,UObject* InAsset, FDataValidationContext& Context)
 {
 	if (!InAsset)
 	{
@@ -23,17 +26,20 @@ EDataValidationResult UDeprecatedAssetValidator::ValidateLoadedAsset_Implementat
 			? TEXT("<none specified>")
 			: Info.Replacement.ToSoftObjectPath().ToString();
 
-		ValidationErrors.Add(
-			FText::Format(
-				NSLOCTEXT("DeprecatedAssetValidator", "AssetDeprecatedMsg",
-					"Asset '{0}' is deprecated. Use '{1}' instead."),
-				FText::FromString(InAsset->GetPathName()),
-				FText::FromString(ReplacementStr)
-			)
-		);
+		Context.AddError(FText::Format(
+			NSLOCTEXT("DeprecatedAssetValidator", "AssetDeprecatedMsg",
+				"Asset '{0}' is deprecated. Use '{1}' instead."),
+			FText::FromString(InAsset->GetPathName()),
+			FText::FromString(ReplacementStr)
+		));
+
+		
 
 		return EDataValidationResult::Invalid;
 	}
 
 	return EDataValidationResult::Valid;
 }
+
+
+

@@ -21,14 +21,12 @@ struct FDeprecatedAssetInfo
 
 
 UCLASS()
-class DEPRECATEDASSETS_API UDeprecatedAssetMetadataLibrary : public UBlueprintFunctionLibrary
+class DEPRECATEDASSETSEDITOR_API UDeprecatedAssetMetadataLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
 public:
-	
-#if WITH_EDITOR
-	
+
 	UFUNCTION(BlueprintCallable, Category="DeprecatedAssets", meta=(DisplayName="Get Deprecated Asset Info"))
 	static bool GetDeprecatedInfo(UObject* Asset, FDeprecatedAssetInfo& OutInfo);
 
@@ -57,6 +55,6 @@ private:
 	
 	static bool GetMetaValue(UObject* Asset, const FName& Key, FString& OutValue);
 
-#endif
+
 	
 };

@@ -1,7 +1,11 @@
 #include "DeprecatedAssetsEditor.h"
+
+#include "ContentBrowserModule.h"
 #include "DeprecatedContentBrowserExtender.h"
 #include "DeprecatedLevelHooks.h"
 #include "Modules/ModuleManager.h"
+
+DEFINE_LOG_CATEGORY(LogDeprecatedAssetPlugin);
 
 IMPLEMENT_MODULE(FDeprecatedAssetsEditorModule, DeprecatedAssetsEditor)
 
@@ -10,6 +14,8 @@ void FDeprecatedAssetsEditorModule::StartupModule()
 	RegisterContentBrowserExtenders();
 	
 	RegisterLevelHooks();
+
+	
 }
 
 void FDeprecatedAssetsEditorModule::ShutdownModule()

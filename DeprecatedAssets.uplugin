@@ -13,11 +13,6 @@
 	"IsExperimentalVersion": false,
 	"Modules": [
 		{
-			"Name": "DeprecatedAssets",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
 			"Name": "DeprecatedAssetsEditor",
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit"

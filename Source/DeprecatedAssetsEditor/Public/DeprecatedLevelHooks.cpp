@@ -33,21 +33,45 @@ bool FDeprecatedLevelHooks::IsAssetDeprecated(UObject* Asset, TSoftObjectPtr<UOb
 
 void FDeprecatedLevelHooks::ReportDeprecatedAsset(UObject* DeprecatedAsset)
 {
+
 	if (!DeprecatedAsset) return;
+
+	FMessageDialog::Open(
+		EAppMsgType::Ok,
+		LOCTEXT("DeprecatedFoundOnPackageSave",
+			"This asset saves references to deprecated assets. See the Data Validation log for details.")
+	);
 
 	TSoftObjectPtr<UObject> Replacement;
 	
 	IsAssetDeprecated(DeprecatedAsset, Replacement);
 
 	FMessageLog Log("DataValidation");
+
+	FString ExtraContext;
 	
-	Log.Error(FText::Format(
-		LOCTEXT("DeprecatedAssetUsed", "Asset '{0}' is deprecated. Use '{1}' instead."),
+	if (DeprecatedAsset->IsA<UMaterialInterface>())
+	{
+		if (UObject* OuterAsset = DeprecatedAsset->GetOuter())
+		{
+			ExtraContext = FString::Printf(TEXT(" (on asset '%s')"), *OuterAsset->GetName());
+		}
+	}
+
+	Log.Warning(FText::Format(
+		LOCTEXT("DeprecatedAssetUsed",
+			"Asset '{0}'{2} is deprecated. Use '{1}' instead."),
 		FText::FromString(DeprecatedAsset->GetPathName()),
-		FText::FromString(Replacement.IsNull() ? TEXT("<none specified>") : Replacement.ToSoftObjectPath().ToString())
+		FText::FromString(Replacement.IsNull()
+			? TEXT("<none specified>")
+			: Replacement.ToSoftObjectPath().ToString()),
+		FText::FromString(ExtraContext)
 	));
-	
+
 	Log.Open();
+
+	SchedulePackagesCheckedReset();
+
 }
 
 void FDeprecatedLevelHooks::Register(FDelegateHandle& OutOnActorAddedHandle,FDelegateHandle& OutPreSaveWorldHandle,FDelegateHandle& OutOnPropertyChangedHandle,FDelegateHandle& OutOnObjectPreSaveHandle)
@@ -62,6 +86,8 @@ void FDeprecatedLevelHooks::Register(FDelegateHandle& OutOnActorAddedHandle,FDel
 	OutOnPropertyChangedHandle = FCoreUObjectDelegates::OnObjectPropertyChanged.AddStatic(&FDeprecatedLevelHooks::OnPropertyChanged);
 
 	OutOnObjectPreSaveHandle = FCoreUObjectDelegates::OnObjectPreSave.AddStatic(&FDeprecatedLevelHooks::OnObjectPreSave);
+
+	
 }
 
 void FDeprecatedLevelHooks::Unregister(FDelegateHandle& OnActorAddedHandle,FDelegateHandle& PreSaveWorldHandle,FDelegateHandle& OnPropertyChangedHandle,FDelegateHandle& OnObjectPreSaveHandle)
@@ -135,49 +161,24 @@ void FDeprecatedLevelHooks::DeferredCheckActor(TWeakObjectPtr<AActor> WeakActor)
 		for (int32 Index = 0; Index < SKC->GetNumMaterials(); ++Index)
 		{
 			CheckObject(SKC->GetMaterial(Index));
+
 		}
-			
 	}
+
+	SchedulePackagesCheckedReset();
 }
 
 void FDeprecatedLevelHooks::OnPropertyChanged(UObject* Object, FPropertyChangedEvent& Event)
 {
+
 	if (!Object || !Event.Property) return;
 
-	const FName PropertyName = Event.Property->GetFName();
+	if (AActor* Actor = Cast<AActor>(Object))
+	{
+		DeferredCheckActor(TWeakObjectPtr<AActor>(Actor));
+	}
 
-	if (UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(Object))
-	{
-		if (PropertyName == TEXT("StaticMesh"))
-		{
-			if (UStaticMesh* Mesh = SMC->GetStaticMesh())
-			{
-				TSoftObjectPtr<UObject> Replacement;
-				
-				if (IsAssetDeprecated(Mesh, Replacement))
-				{
-					ReportDeprecatedAsset(Mesh);
-				}
-					
-			}
-		}
-	}
-	if (USkeletalMeshComponent* SKC = Cast<USkeletalMeshComponent>(Object))
-	{
-		if (PropertyName == TEXT("SkeletalMesh"))
-		{
-			if (USkeletalMesh* Mesh = SKC->GetSkeletalMeshAsset())
-			{
-				TSoftObjectPtr<UObject> Replacement;
-				
-				if (IsAssetDeprecated(Mesh, Replacement))
-				{
-					ReportDeprecatedAsset(Mesh);
-				}
-					
-			}
-		}
-	}
+	SchedulePackagesCheckedReset();
 }
 
 void FDeprecatedLevelHooks::OnPreSaveWorld(UWorld* World, FObjectPreSaveContext)
@@ -193,18 +194,15 @@ void FDeprecatedLevelHooks::OnObjectPreSave(UObject* Object, FObjectPreSaveConte
 {
 	if (!Object) return;
 
-	if (UPackage* Package = Object->GetOutermost())
+	if (AActor* Actor = Cast<AActor>(Object))
 	{
-		if (!PackagesCheckedThisSave.Contains(Package->GetFName()))
-		{
-			PackagesCheckedThisSave.Add(Package->GetFName());
-			
-			SchedulePackagesCheckedReset();
-			
-			ScanPackageForDeprecatedAssets(Package);
-		}
+		DeferredCheckActor(TWeakObjectPtr<AActor>(Actor));
+
+		SchedulePackagesCheckedReset();
 	}
 }
+
+
 
 void FDeprecatedLevelHooks::ScanWorldForDeprecatedAssets(UWorld* World)
 {
@@ -244,10 +242,11 @@ void FDeprecatedLevelHooks::ScanWorldForDeprecatedAssets(UWorld* World)
 				{
 					ReportDeprecatedAsset(Asset);
 					
-					FMessageDialog::Open(EAppMsgType::Ok,
-						LOCTEXT("DeprecatedFoundOnWorldSave", "This map references deprecated assets. See the Data Validation log for details."));
+					FMessageDialog::Open(EAppMsgType::Ok,LOCTEXT("DeprecatedFoundOnWorldSave", "This map references deprecated assets. See the Data Validation log for details."));
 					
 					bWarningShownThisSave = true;
+
+					SchedulePackagesCheckedReset();
 					
 					return;
 				}
@@ -294,10 +293,9 @@ void FDeprecatedLevelHooks::ScanPackageForDeprecatedAssets(UPackage* Package)
 				{
 					ReportDeprecatedAsset(Asset);
 					
-					FMessageDialog::Open(EAppMsgType::Ok,
-						LOCTEXT("DeprecatedFoundOnPackageSave", "This asset saves references to deprecated assets. See the Data Validation log for details."));
-
 					bWarningShownThisSave = true;
+
+					SchedulePackagesCheckedReset();
 
 					return;
 				}
@@ -306,24 +304,17 @@ void FDeprecatedLevelHooks::ScanPackageForDeprecatedAssets(UPackage* Package)
 	}
 }
 
+
 void FDeprecatedLevelHooks::SchedulePackagesCheckedReset()
 {
-	static bool bResetScheduled = false;
-	
-	if (bResetScheduled) return;
-
-	bResetScheduled = true;
-
 	FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([](float)
 	{
 		PackagesCheckedThisSave.Empty();
-		
-		bResetScheduled = false;
-		
+
 		bWarningShownThisSave = false;
-		
+
 		return false; 
-	}), 0.5f);
+	}), 0.0f); // Next tick
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -16,11 +16,11 @@ private:
 
 	static void BuildMenu(FMenuBuilder& MenuBuilder, TArray<FAssetData> SelectedAssets);
 
-	static void Cmd_MarkDeprecated(TArray<FAssetData> SelectedAssets);
+	static void MarkAssetAsDeprecated(TArray<FAssetData> SelectedAssets);
 
-	static void Cmd_SetReplacement(TArray<FAssetData> SelectedAssets);
+	static void SetAssetReplacement(TArray<FAssetData> SelectedAssets);
 
-	static void Cmd_UnmarkDeprecated(TArray<FAssetData> SelectedAssets);
+	static void UnmarkAssetAsDeprecated(TArray<FAssetData> SelectedAssets);
 
 	static void ShowPickReplacementDialog(TFunction<void(UObject*)> OnPicked,UObject* InitialReplacement = nullptr);
 

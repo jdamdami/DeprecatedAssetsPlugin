@@ -2,6 +2,8 @@
 
 #include "Modules/ModuleManager.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogDeprecatedAssetPlugin, Log, All);
+
 class FDeprecatedAssetsEditorModule : public IModuleInterface
 {
 public:

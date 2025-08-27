@@ -66,7 +66,6 @@ void FDeprecatedContentBrowserExtender::BuildMenu(FMenuBuilder& MenuBuilder, TAr
 	
 	bool bAllNotDeprecated = true;
 
-	
 	for (const FAssetData& AD : SelectedAssets)
 	{
 		if (UObject* Asset = AD.GetAsset())
@@ -94,25 +93,22 @@ void FDeprecatedContentBrowserExtender::BuildMenu(FMenuBuilder& MenuBuilder, TAr
 				LOCTEXT("MarkDeprecated", "Mark as Deprecated…"),
 				LOCTEXT("MarkDeprecatedTT", "Mark the selected assets as deprecated and optionally set a replacement asset."),
 				FSlateIcon(),
-				FUIAction(FExecuteAction::CreateStatic(&FDeprecatedContentBrowserExtender::Cmd_MarkDeprecated, SelectedAssets))
+				FUIAction(FExecuteAction::CreateStatic(&FDeprecatedContentBrowserExtender::MarkAssetAsDeprecated, SelectedAssets))
 			);
 		}
-
-		
-		
 
 		if (bAllDeprecated)
 		{
 			MenuBuilder.AddMenuEntry(
 				LOCTEXT("SetReplacement", "Set Replacement…"),
 				LOCTEXT("SetReplacementTT", "Set or change the recommended replacement asset for deprecated assets."),
-				FSlateIcon(),FUIAction(FExecuteAction::CreateStatic(&FDeprecatedContentBrowserExtender::Cmd_SetReplacement, SelectedAssets)));
+				FSlateIcon(),FUIAction(FExecuteAction::CreateStatic(&FDeprecatedContentBrowserExtender::SetAssetReplacement, SelectedAssets)));
 			
 			MenuBuilder.AddMenuEntry(
 				LOCTEXT("UnmarkDeprecated", "Unmark Deprecated"),
 				LOCTEXT("UnmarkDeprecatedTT", "Remove the deprecated mark and replacement info from selected assets."),
 				FSlateIcon(),
-				FUIAction(FExecuteAction::CreateStatic(&FDeprecatedContentBrowserExtender::Cmd_UnmarkDeprecated, SelectedAssets))
+				FUIAction(FExecuteAction::CreateStatic(&FDeprecatedContentBrowserExtender::UnmarkAssetAsDeprecated, SelectedAssets))
 			);
 		}
 	}
@@ -120,7 +116,7 @@ void FDeprecatedContentBrowserExtender::BuildMenu(FMenuBuilder& MenuBuilder, TAr
 	MenuBuilder.EndSection();
 }
 
-void FDeprecatedContentBrowserExtender::Cmd_MarkDeprecated(TArray<FAssetData> SelectedAssets)
+void FDeprecatedContentBrowserExtender::MarkAssetAsDeprecated(TArray<FAssetData> SelectedAssets)
 {
 	ShowPickReplacementDialog([SelectedAssets](UObject* Picked)
 	{
@@ -137,36 +133,73 @@ void FDeprecatedContentBrowserExtender::Cmd_MarkDeprecated(TArray<FAssetData> Se
 	});
 }
 
-void FDeprecatedContentBrowserExtender::Cmd_SetReplacement(TArray<FAssetData> SelectedAssets)
+void FDeprecatedContentBrowserExtender::SetAssetReplacement(TArray<FAssetData> SelectedAssets)
 {
-	ShowPickReplacementDialog([SelectedAssets](UObject* Picked)
+    UObject* InitialReplacement = nullptr;
+
+	UObject* CommonReplacement = nullptr;
+	
+	bool bAllSame = true;
+
+	for (const FAssetData& AD : SelectedAssets)
 	{
-		int32 Count = 0;
-		
-		for (const FAssetData& AD : SelectedAssets)
+		if (UObject* Asset = AD.GetAsset())
 		{
-			if (UObject* Asset = AD.GetAsset())
+			FDeprecatedAssetInfo Info;
+			
+			UDeprecatedAssetMetadataLibrary::GetDeprecatedInfo(Asset, Info);
+
+			UObject* ThisReplacement = Info.Replacement.LoadSynchronous();
+            	
+			if (CommonReplacement == nullptr)
 			{
-				FDeprecatedAssetInfo Info;
-				
-				UDeprecatedAssetMetadataLibrary::GetDeprecatedInfo(Asset, Info);
-				
-				if (!Info.bIsDeprecated)
-				{
-					Info.bIsDeprecated = true;
-				}
-				
-				UDeprecatedAssetMetadataLibrary::MarkDeprecated(Asset, TSoftObjectPtr<UObject>(Picked));
-				
-				++Count;
+				CommonReplacement = ThisReplacement;
+			}
+			else if (CommonReplacement != ThisReplacement)
+			{
+				bAllSame = false;
+                	
+				break;
 			}
 		}
-		
-		Notify(FText::Format(LOCTEXT("SetReplacementNAssets", "Set replacement for {0} asset(s)."), Count), true);
-	});
+	}
+
+	if (bAllSame)
+	{
+		InitialReplacement = CommonReplacement;
+	}
+
+    ShowPickReplacementDialog(
+        [SelectedAssets](UObject* Picked)
+        {
+            int32 Count = 0;
+
+            for (const FAssetData& AD : SelectedAssets)
+            {
+                if (UObject* Asset = AD.GetAsset())
+                {
+                    FDeprecatedAssetInfo Info;
+                	
+                    UDeprecatedAssetMetadataLibrary::GetDeprecatedInfo(Asset, Info);
+
+                    if (!Info.bIsDeprecated)
+                    {
+                        Info.bIsDeprecated = true;
+                    }
+
+                    UDeprecatedAssetMetadataLibrary::MarkDeprecated(Asset, TSoftObjectPtr<UObject>(Picked));
+                	
+                    ++Count;
+                }
+            }
+
+            Notify(FText::Format(LOCTEXT("SetReplacementNAssets", "Set replacement for {0} asset(s)."), Count), true);
+        },
+        InitialReplacement 
+    );
 }
 
-void FDeprecatedContentBrowserExtender::Cmd_UnmarkDeprecated(TArray<FAssetData> SelectedAssets)
+void FDeprecatedContentBrowserExtender::UnmarkAssetAsDeprecated(TArray<FAssetData> SelectedAssets)
 {
 	int32 Count = 0;
 	
@@ -216,7 +249,7 @@ void FDeprecatedContentBrowserExtender::ShowPickReplacementDialog(TFunction<void
             .AllowClear(true)
             .ObjectPath_Lambda([PathPtr]() -> FString
             {
-                return *PathPtr; // Always pull current path
+                return *PathPtr; 
             })
             .OnObjectChanged_Lambda([PickedPtr, PathPtr](const FAssetData& InAssetData)
             {

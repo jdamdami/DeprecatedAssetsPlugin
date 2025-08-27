@@ -1,7 +1,8 @@
 #include "DeprecatedAssetMetadata.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "UObject/Package.h"
 
-#if WITH_EDITOR
+
 
 const FName UDeprecatedAssetMetadataLibrary::MetaKey_Deprecated(TEXT("DeprecatedAssets.Deprecated"));
 const FName UDeprecatedAssetMetadataLibrary::MetaKey_Replacement(TEXT("DeprecatedAssets.Replacement"));
@@ -115,6 +116,12 @@ bool UDeprecatedAssetMetadataLibrary::MarkDeprecated(UObject* Asset, TSoftObject
 		? RemoveMetaValue(Asset, MetaKey_Replacement)
 		: SetMetaValue(Asset, MetaKey_Replacement, Replacement.ToSoftObjectPath().ToString());
 
+	
+	FAssetRegistryModule::AssetCreated(Asset);
+	
+	Asset->MarkPackageDirty();
+	
+
 	return b1 && b2;
 }
 
@@ -125,7 +132,9 @@ bool UDeprecatedAssetMetadataLibrary::UnmarkDeprecated(UObject* Asset)
 	const bool b1 = RemoveMetaValue(Asset, MetaKey_Deprecated);
 	
 	const bool b2 = RemoveMetaValue(Asset, MetaKey_Replacement);
+
 	
+
 	return b1 || b2;
 }
 
@@ -147,5 +156,5 @@ bool UDeprecatedAssetMetadataLibrary::GetReplacement(UObject* Asset, TSoftObject
 	return false;
 }
 
-#endif
+
 

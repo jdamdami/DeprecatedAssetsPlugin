@@ -27,7 +27,7 @@ public class DeprecatedAssetsEditor : ModuleRules
 			"ToolMenus",
 			"EditorSubsystem",
 			"Kismet",
-			"DeprecatedAssets" 
+			"DeprecatedAssets"
 		});
 	}
 }
