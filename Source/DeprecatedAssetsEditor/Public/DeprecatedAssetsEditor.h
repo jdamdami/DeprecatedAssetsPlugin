@@ -11,6 +11,8 @@ public:
 	
 	virtual void ShutdownModule() override;
 
+	static TSharedRef<SWidget> OnDeprecatedAssetIconGenerate(const FAssetData& AssetData);
+
 private:
 
 	FDelegateHandle CBExtenderHandle;
@@ -23,7 +25,9 @@ private:
 	
 	FDelegateHandle OnObjectPreSaveHandle;
 
+	static TUniquePtr<FSlateStyleSet> DeprecatedStyleSet;
 	
+	static FName DeprecatedAssetIconName;
 	
 	void RegisterContentBrowserExtenders();
 	
@@ -32,6 +36,10 @@ private:
 	void RegisterLevelHooks();
 	
 	void UnregisterLevelHooks();
+
+	void RegisterSlateStyle();
+	
+	void UnregisterSlateStyle();
 
 
 	

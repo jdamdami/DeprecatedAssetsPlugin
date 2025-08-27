@@ -14,8 +14,8 @@
 	"Modules": [
 		{
 			"Name": "DeprecatedAssetsEditor",
-			"Type": "Editor",
-			"LoadingPhase": "PostEngineInit"
+			"Type": "EditorNoCommandlet",
+			"LoadingPhase": "Default"
 		}
 	]
 }

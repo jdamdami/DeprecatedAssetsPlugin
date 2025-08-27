@@ -133,6 +133,22 @@ void FDeprecatedLevelHooks::DeferredCheckActor(TWeakObjectPtr<AActor> WeakActor)
 
 	AActor* Actor = WeakActor.Get();
 
+	if (!IsValid(Actor)) return;
+
+	/*We don't want the check to happen if we are not in a map that is not using external actors,
+	 *that would probably mean that we are in dev or test map
+	 */
+	
+	UWorld* World = Actor->GetWorld();
+
+	if (!IsValid(World)) return;
+
+	ULevel*Level = World->GetCurrentLevel();
+
+	if (!IsValid(Level)) return;
+
+	if (!Level->bUseExternalActors) return;
+
 	auto CheckObject = [](UObject* Obj)
 	{
 		TSoftObjectPtr<UObject> Replacement;
@@ -183,6 +199,14 @@ void FDeprecatedLevelHooks::OnPropertyChanged(UObject* Object, FPropertyChangedE
 
 void FDeprecatedLevelHooks::OnPreSaveWorld(UWorld* World, FObjectPreSaveContext)
 {
+	if (!IsValid(World)) return;
+
+	ULevel*Level = World->GetCurrentLevel();
+
+	if (!IsValid(Level)) return;
+
+	if (!Level->bUseExternalActors) return;
+	
 	bWarningShownThisSave = false;
 	
 	PackagesCheckedThisSave.Reset();

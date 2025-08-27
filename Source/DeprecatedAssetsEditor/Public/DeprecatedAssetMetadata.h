@@ -55,6 +55,8 @@ private:
 	
 	static bool GetMetaValue(UObject* Asset, const FName& Key, FString& OutValue);
 
+	static void RefreshAssetThumbnail(UObject* Asset);
+
 
 	
 };

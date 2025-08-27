@@ -1,4 +1,7 @@
 #include "DeprecatedAssetMetadata.h"
+
+#include "ContentBrowserModule.h"
+#include "IContentBrowserSingleton.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "UObject/Package.h"
 
@@ -83,6 +86,18 @@ bool UDeprecatedAssetMetadataLibrary::GetMetaValue(UObject* Asset, const FName& 
 	return false;
 }
 
+void UDeprecatedAssetMetadataLibrary::RefreshAssetThumbnail(UObject* Asset)
+{
+	if (!Asset) return;
+
+	FAssetRegistryModule& AssetRegistryModule =FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+
+	FString Path = Asset->GetPathName();
+	
+	AssetRegistryModule.AssetRenamed(Asset, Path);
+
+}
+
 bool UDeprecatedAssetMetadataLibrary::GetDeprecatedInfo(UObject* Asset, FDeprecatedAssetInfo& OutInfo)
 {
 	OutInfo = {};
@@ -103,6 +118,8 @@ bool UDeprecatedAssetMetadataLibrary::GetDeprecatedInfo(UObject* Asset, FDepreca
 		OutInfo.Replacement = TSoftObjectPtr<UObject>(FSoftObjectPath(ReplacementStr));
 	}
 
+	
+
 	return true;
 }
 
@@ -117,11 +134,13 @@ bool UDeprecatedAssetMetadataLibrary::MarkDeprecated(UObject* Asset, TSoftObject
 		: SetMetaValue(Asset, MetaKey_Replacement, Replacement.ToSoftObjectPath().ToString());
 
 	
-	FAssetRegistryModule::AssetCreated(Asset);
+	//FAssetRegistryModule::AssetCreated(Asset);
 	
 	Asset->MarkPackageDirty();
-	
 
+	RefreshAssetThumbnail(Asset);
+
+	
 	return b1 && b2;
 }
 
@@ -133,8 +152,8 @@ bool UDeprecatedAssetMetadataLibrary::UnmarkDeprecated(UObject* Asset)
 	
 	const bool b2 = RemoveMetaValue(Asset, MetaKey_Replacement);
 
+	RefreshAssetThumbnail(Asset);
 	
-
 	return b1 || b2;
 }
 
