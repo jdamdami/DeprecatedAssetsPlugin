@@ -41,6 +41,12 @@ private:
 	
 	void UnregisterSlateStyle();
 
+	void RegisterConsoleCommands();
+
+	void UnregisterConsoleCommands();
+
+	void HandleToggleErrorReportConsoleCommand(const TArray<FString>& Args);
+
 
 	
 };

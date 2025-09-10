@@ -134,13 +134,10 @@ bool UDeprecatedAssetMetadataLibrary::MarkDeprecated(UObject* Asset, TSoftObject
 		: SetMetaValue(Asset, MetaKey_Replacement, Replacement.ToSoftObjectPath().ToString());
 
 	
-	//FAssetRegistryModule::AssetCreated(Asset);
-	
 	Asset->MarkPackageDirty();
 
 	RefreshAssetThumbnail(Asset);
 
-	
 	return b1 && b2;
 }
 

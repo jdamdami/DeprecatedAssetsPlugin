@@ -1,21 +1,27 @@
 {
-	"FileVersion": 3,
-	"Version": 1,
-	"VersionName": "1.0",
-	"FriendlyName": "Deprecated Assets",
-	"Description": "Mark assets as deprecated, set a replacement, and validate usage in maps.",
-	"Category": "Editor",
-	"CreatedBy": "",
-	"CreatedByURL": "",
-	"DocsURL": "",
-	"CanContainContent": false,
-	"IsBetaVersion": false,
-	"IsExperimentalVersion": false,
-	"Modules": [
-		{
-			"Name": "DeprecatedAssetsEditor",
-			"Type": "EditorNoCommandlet",
-			"LoadingPhase": "Default"
-		}
-	]
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0",
+  "FriendlyName": "Deprecated Assets",
+  "Description": "Mark assets as deprecated, set a replacement, and validate usage in maps.",
+  "Category": "Editor",
+  "CreatedBy": "",
+  "CreatedByURL": "",
+  "DocsURL": "",
+  "CanContainContent": false,
+  "IsBetaVersion": false,
+  "IsExperimentalVersion": false,
+  "Modules": [
+    {
+      "Name": "DeprecatedAssetsEditor",
+      "Type": "EditorNoCommandlet",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "DataValidation",
+      "Enabled": true
+    }
+  ]
 }

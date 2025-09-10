@@ -8,7 +8,11 @@ public class DeprecatedAssetsEditor : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new[]
 		{
-			"Core", "CoreUObject", "Engine", "Slate", "SlateCore"
+			"Core",
+			"CoreUObject", 
+			"Engine", 
+			"Slate", 
+			"SlateCore"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new[]
@@ -29,7 +33,9 @@ public class DeprecatedAssetsEditor : ModuleRules
 			"Kismet",
 			"AssetTools",
 			"AssetDefinition",
-			"AppFramework"
+			"AppFramework",
+			"DeveloperSettings",
+			"ContentBrowserData"
 		});
 	}
 }

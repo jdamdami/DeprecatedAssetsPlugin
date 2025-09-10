@@ -1,9 +1,12 @@
 #include "DeprecatedAssetsEditor.h"
 
 #include "ContentBrowserModule.h"
+#include "DeprecatedAssetFrontendFilter.h"
 #include "DeprecatedAssetMetadata.h"
+#include "DeprecatedAssetSettings.h"
 #include "DeprecatedContentBrowserExtender.h"
 #include "DeprecatedLevelHooks.h"
+#include "FrontendFilterBase.h"
 #include "Interfaces/IPluginManager.h"
 #include "Modules/ModuleManager.h"
 #include "Styling/SlateStyleRegistry.h"
@@ -24,15 +27,7 @@ void FDeprecatedAssetsEditorModule::StartupModule()
 
 	RegisterSlateStyle();
 
-	
-	FContentBrowserModule& CBModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
-
-	FAssetViewExtraStateGenerator StateGenerator(
-		FOnGenerateAssetViewExtraStateIndicators::CreateStatic(&FDeprecatedAssetsEditorModule::OnDeprecatedAssetIconGenerate),
-		FOnGenerateAssetViewExtraStateIndicators()
-	);
-
-	CBModule.AddAssetViewExtraStateGenerator(StateGenerator);
+	RegisterConsoleCommands();
 }
 
 void FDeprecatedAssetsEditorModule::ShutdownModule()
@@ -42,6 +37,8 @@ void FDeprecatedAssetsEditorModule::ShutdownModule()
 	UnregisterContentBrowserExtenders();
 
 	UnregisterSlateStyle();
+
+	UnregisterConsoleCommands();
 }
 
 TSharedRef<SWidget> FDeprecatedAssetsEditorModule::OnDeprecatedAssetIconGenerate(const FAssetData& AssetData)
@@ -134,6 +131,16 @@ void FDeprecatedAssetsEditorModule::RegisterSlateStyle()
 	FSlateStyleRegistry::RegisterSlateStyle(*DeprecatedStyleSet);
 	
 	FSlateApplication::Get().GetRenderer()->ReloadTextureResources();
+
+	FContentBrowserModule& CBModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+
+	FAssetViewExtraStateGenerator StateGenerator(
+		FOnGenerateAssetViewExtraStateIndicators::CreateStatic(&FDeprecatedAssetsEditorModule::OnDeprecatedAssetIconGenerate),
+		FOnGenerateAssetViewExtraStateIndicators()
+	);
+
+	CBModule.AddAssetViewExtraStateGenerator(StateGenerator);
+
 }
 
 void FDeprecatedAssetsEditorModule::UnregisterSlateStyle()
@@ -144,4 +151,55 @@ void FDeprecatedAssetsEditorModule::UnregisterSlateStyle()
 		
 		DeprecatedStyleSet.Reset();
 	}
+}
+
+void FDeprecatedAssetsEditorModule::RegisterConsoleCommands()
+{
+	IConsoleManager::Get().RegisterConsoleCommand(
+			TEXT("DeprecatedAssets.ErrorReport"),
+			TEXT("Toggle full error reporting for deprecated assets"),
+			FConsoleCommandWithArgsDelegate::CreateRaw(this, &FDeprecatedAssetsEditorModule::HandleToggleErrorReportConsoleCommand),
+			ECVF_Default
+		);
+}
+
+void FDeprecatedAssetsEditorModule::UnregisterConsoleCommands()
+{
+	IConsoleManager::Get().UnregisterConsoleObject(TEXT("DeprecatedAssets.ErrorReport"), false);
+}
+
+void FDeprecatedAssetsEditorModule::HandleToggleErrorReportConsoleCommand(const TArray<FString>& Args)
+{
+	UDeprecatedAssetSettings* Settings = GetMutableDefault<UDeprecatedAssetSettings>();
+	
+	if (!Settings)
+	{
+		return;
+	}
+
+	if (Args.Num() == 0)
+	{
+		UE_LOG(LogDeprecatedAssetPlugin, Error, TEXT("Missing argument. Usage: DeprecatedAssets.ErrorReport <0|1>"));
+		
+		return;
+	}
+
+	const FString& Arg = Args[0];
+
+	if (Arg == TEXT("1"))
+	{
+		Settings->bEnableFullErrorReport = true;
+	}
+	else if (Arg == TEXT("0"))
+	{
+		Settings->bEnableFullErrorReport = false;
+	}
+	else
+	{
+		UE_LOG(LogDeprecatedAssetPlugin, Error, TEXT("Invalid argument '%s'. Usage: DeprecatedAssets.ErrorReport <0|1>"), *Arg);
+		
+		return;
+	}
+
+	UE_LOG(LogDeprecatedAssetPlugin, Display, TEXT("Deprecated Asset Plugin: bEnableFullErrorReport = %s"),Settings->bEnableFullErrorReport ? TEXT("true") : TEXT("false"));
 }

@@ -1,5 +1,7 @@
 #include "DeprecatedAssetValidator.h"
 #include "DeprecatedAssetMetadata.h"
+#include "DeprecatedAssetsEditor.h"
+#include "DeprecatedAssetSettings.h"
 #include "Misc/DataValidation.h"
 
 
@@ -14,6 +16,15 @@ EDataValidationResult UDeprecatedAssetValidator::ValidateLoadedAsset_Implementat
 	if (!InAsset)
 	{
 		return EDataValidationResult::NotValidated;
+	}
+
+	const UDeprecatedAssetSettings* Settings = GetDefault<UDeprecatedAssetSettings>();
+
+	if (!Settings->bEnableFullErrorReport)
+	{
+		//UE_LOG(LogDeprecatedAssetPlugin,Error,TEXT("USE OF DEPRECATED ASSET WITH ERROR REPORT DEACTIVATED, REACTIVATE ERROR REPORT"));
+
+		return EDataValidationResult::Valid;
 	}
 
 	FDeprecatedAssetInfo Info;

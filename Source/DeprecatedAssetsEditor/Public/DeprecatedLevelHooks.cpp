@@ -5,6 +5,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "DeprecatedAssetMetadata.h"
+#include "DeprecatedAssetsEditor.h"
+#include "DeprecatedAssetSettings.h"
 #include "Logging/MessageLog.h"
 #include "Misc/MessageDialog.h"
 #include "UObject/Package.h"
@@ -33,8 +35,18 @@ bool FDeprecatedLevelHooks::IsAssetDeprecated(UObject* Asset, TSoftObjectPtr<UOb
 
 void FDeprecatedLevelHooks::ReportDeprecatedAsset(UObject* DeprecatedAsset)
 {
-
 	if (!DeprecatedAsset) return;
+
+	const UDeprecatedAssetSettings* Settings = GetDefault<UDeprecatedAssetSettings>();
+
+	if (!Settings->bEnableFullErrorReport)
+	{
+		UE_LOG(LogDeprecatedAssetPlugin,Error,TEXT("USE OF DEPRECATED ASSET WITH ERROR REPORT DEACTIVATED, REACTIVATE ERROR REPORT"));
+
+		SchedulePackagesCheckedReset();
+		
+		return;
+	}
 
 	FMessageDialog::Open(
 		EAppMsgType::Ok,
