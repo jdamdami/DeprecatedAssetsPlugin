@@ -14,9 +14,7 @@ class DEPRECATEDASSETSEDITOR_API UDeprecatedAssetSettings : public UDeveloperSet
 
 public:
 
-	/*If it is not enabled, the warnings will only be visible in output log, if you need
-	 * to uncheck this, DO NOT PUSH IT TO PERFORCE
-	 */
+	//If it is not enabled, the warnings will only be visible in output log
 	UPROPERTY(EditAnywhere, Config, Category="General")
 	bool bEnableFullErrorReport = true;
 
